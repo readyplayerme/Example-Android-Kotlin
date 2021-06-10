@@ -38,8 +38,11 @@ class WebViewActivity : AppCompatActivity() {
             evaluateJavascript("""
                 window.addEventListener("message", receiveMessage, false)
                 function receiveMessage(event){
-                    document.querySelector('.content').remove()
-                    alert(event.data)
+                    if (typeof event.data === "string" && event.data.indexOf("https:") !== -1) {
+                        var content = document.querySelector(".content")
+                        if (content) content.remove()
+                        Android.showToast(event.data)
+                    }
                 }
             """.trimIndent(), null)
         }
@@ -53,10 +56,12 @@ class WebViewActivity : AppCompatActivity() {
             databaseEnabled = true
             domStorageEnabled = true
             allowFileAccess = true
+
         }
 
         with(binding.webview){
             loadUrl("https://readyplayer.me/avatar")
+            addJavascriptInterface(WebViewInterface(this@WebViewActivity), "Android")
         }
         // TODO, implement custom loader
     }
