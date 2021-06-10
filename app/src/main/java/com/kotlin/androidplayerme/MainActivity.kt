@@ -3,7 +3,6 @@ package com.kotlin.androidplayerme
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -16,6 +15,7 @@ import com.kotlin.androidplayerme.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainActivityViewModel
+    private var isPageLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,14 +31,33 @@ class MainActivity : AppCompatActivity() {
         binding.createButton.setOnClickListener {
             openWebViewPage()
         }
+
+        binding.updateButton.setOnClickListener{
+            openUpdateWebView()
+        }
+    }
+
+    private fun openUpdateWebView() {
+        viewModel.viewState.postValue(ViewState.WEBVIEW)
     }
 
     private fun registerViewModel() {
+        // handle display and hiding update button
+        var viewState = ViewState.MAIN
+        var hasCookie = false
+
         viewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainActivityViewModel::class.java)
         viewModel.viewState.observe(this){
+            viewState = it
+
             if (it == ViewState.MAIN){
                 binding.webview.visibility = View.INVISIBLE
-                binding.createButton.visibility = View.VISIBLE
+                if (isPageLoaded){
+                    binding.createButton.visibility = View.VISIBLE
+                }
+                if (hasCookie){
+                    binding.updateButton.visibility = View.VISIBLE
+                }
             } else {
                 binding.webview.visibility = View.VISIBLE
                 binding.updateButton.visibility = View.INVISIBLE
@@ -46,19 +65,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.updateButtonDisplayed.observe(this){
-            if(it){
+        viewModel.hasCookie.observe(this){
+            hasCookie = it
+            if(it && viewState == ViewState.MAIN){
                 binding.updateButton.visibility = View.VISIBLE
             } else {
                 binding.updateButton.visibility = View.INVISIBLE
             }
         }
+
     }
 
     private fun openWebViewPage() {
         viewModel.viewState.postValue(ViewState.WEBVIEW)
         CookieManager.getInstance().removeAllCookies{}
         CookieManager.getInstance().removeSessionCookies{}
+        binding.webview.reload()
     }
 
 
@@ -70,7 +92,10 @@ class MainActivity : AppCompatActivity() {
                     handleAvatarCreated()
                     if (
                         CookieManager.getInstance().hasCookies()
-                    ) viewModel.updateButtonDisplayed.postValue(true)
+                    ) viewModel.hasCookie.postValue(true)
+                    binding.progressBar.visibility = View.GONE
+                    binding.createButton.visibility = View.VISIBLE
+                    isPageLoaded = true
                 }
             }
         }
@@ -78,15 +103,14 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun handleAvatarCreated() {
-        // TODO add handler to display android dialog
         with(binding.webview){
             evaluateJavascript("""
                 window.addEventListener("message", receiveMessage, false)
                 function receiveMessage(event){
                     if (typeof event.data === "string" && event.data.indexOf("https:") !== -1) {
                         var content = document.querySelector(".content")
-                        if (content) content.remove()
-                        Android.showToast(event.data)
+                        content.remove()
+                        MyScript.openDialog(event.data)
                     }
                 }
             """.trimIndent(), null)
@@ -105,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         with(binding.webview){
-            addJavascriptInterface(WebViewInterface(this@MainActivity), "Android")
+            addJavascriptInterface(WebViewInterface(this@MainActivity, viewModel), "MyScript")
             loadUrl("https://readyplayer.me/avatar")
         }
         // TODO, implement custom loader

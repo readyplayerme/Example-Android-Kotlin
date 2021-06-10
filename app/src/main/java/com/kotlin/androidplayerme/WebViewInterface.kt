@@ -1,10 +1,30 @@
 package com.kotlin.androidplayerme
 
+import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.webkit.JavascriptInterface
 import android.widget.Toast
 
-class WebViewInterface(private val context: Context) {
-    fun showToast(text: String){
-        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+class WebViewInterface(private val context: Context, private val viewModel: MainActivityViewModel) {
+
+    @JavascriptInterface
+    fun openDialog(text: String){
+        // add to clipboard
+        val data = ClipData.newPlainText("Ready Player Me", text)
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(data)
+        Toast.makeText(context, "Url copied into clipboard.", Toast.LENGTH_SHORT).show()
+
+        val builder = AlertDialog.Builder(context).apply {
+            setTitle("Result")
+            setMessage(text)
+            setPositiveButton("Ok"){ dialog, _ ->
+                dialog.dismiss()
+                viewModel.viewState.postValue(ViewState.MAIN)
+            }
+        }.create()
+        builder.show()
     }
 }
