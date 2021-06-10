@@ -4,10 +4,11 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 
-class WebViewInterface(private val context: Context, private val viewModel: MainActivityViewModel) {
+class WebViewInterface(private val context: Context) {
 
     @JavascriptInterface
     fun openDialog(text: String){
@@ -22,7 +23,9 @@ class WebViewInterface(private val context: Context, private val viewModel: Main
             setMessage(text)
             setPositiveButton("Ok"){ dialog, _ ->
                 dialog.dismiss()
-                viewModel.viewState.postValue(ViewState.MAIN)
+                context.startActivity(
+                    Intent(context, MainActivity::class.java)
+                )
             }
         }.create()
         builder.show()
