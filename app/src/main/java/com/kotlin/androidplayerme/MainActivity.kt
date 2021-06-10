@@ -1,5 +1,6 @@
 package com.kotlin.androidplayerme
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.kotlin.androidplayerme.databinding.ActivityMainBinding
@@ -18,5 +19,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openWebViewPage() {
+        val intent = Intent(this, WebViewActivity::class.java)
+        startActivity(intent)
     }
 }
