@@ -3,7 +3,9 @@ package com.kotlin.androidplayerme
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.view.View
+import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -20,16 +22,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        viewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainActivityViewModel::class.java)
-        viewModel.viewState.observe(this){
-            if (it == ViewState.MAIN){
-                binding.webview.visibility = View.INVISIBLE
-                binding.createButton.visibility = View.VISIBLE
-            } else {
-                binding.webview.visibility = View.VISIBLE
-                binding.createButton.visibility = View.INVISIBLE
-            }
-        }
+        registerViewModel()
+
 
         setUpWebView()
         setUpWebViewClient()
@@ -39,9 +33,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun registerViewModel() {
+        viewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainActivityViewModel::class.java)
+        viewModel.viewState.observe(this){
+            if (it == ViewState.MAIN){
+                binding.webview.visibility = View.INVISIBLE
+                binding.createButton.visibility = View.VISIBLE
+            } else {
+                binding.webview.visibility = View.VISIBLE
+                binding.updateButton.visibility = View.INVISIBLE
+                binding.createButton.visibility = View.INVISIBLE
+            }
+        }
+
+        viewModel.updateButtonDisplayed.observe(this){
+            if(it){
+                binding.updateButton.visibility = View.VISIBLE
+            } else {
+                binding.updateButton.visibility = View.INVISIBLE
+            }
+        }
+    }
+
     private fun openWebViewPage() {
-        binding.webview.loadUrl("https://readyplayer.me/avatar")
         viewModel.viewState.postValue(ViewState.WEBVIEW)
+        CookieManager.getInstance().removeAllCookies{}
+        CookieManager.getInstance().removeSessionCookies{}
     }
 
 
@@ -51,6 +68,9 @@ class MainActivity : AppCompatActivity() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     handleAvatarCreated()
+                    if (
+                        CookieManager.getInstance().hasCookies()
+                    ) viewModel.updateButtonDisplayed.postValue(true)
                 }
             }
         }
@@ -86,6 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         with(binding.webview){
             addJavascriptInterface(WebViewInterface(this@MainActivity), "Android")
+            loadUrl("https://readyplayer.me/avatar")
         }
         // TODO, implement custom loader
     }
