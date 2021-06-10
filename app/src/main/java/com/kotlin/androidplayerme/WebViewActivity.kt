@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import com.kotlin.androidplayerme.databinding.ActivityWebViewBinding
 
 class WebViewActivity : AppCompatActivity() {
@@ -14,6 +16,33 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setUpWebView()
+        setUpWebViewClient()
+
+    }
+
+    private fun setUpWebViewClient() {
+        with(binding.webview){
+            webViewClient = object: WebViewClient(){
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    handleAvatarCreated()
+                }
+            }
+        }
+    }
+
+
+    private fun handleAvatarCreated() {
+        // TODO add handler to display android dialog
+        with(binding.webview){
+            evaluateJavascript("""
+                window.addEventListener("message", receiveMessage, false)
+                function receiveMessage(event){
+                    document.querySelector('.content').remove()
+                    alert(event.data)
+                }
+            """.trimIndent(), null)
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -29,7 +58,6 @@ class WebViewActivity : AppCompatActivity() {
         with(binding.webview){
             loadUrl("https://readyplayer.me/avatar")
         }
-
         // TODO, implement custom loader
     }
 }
