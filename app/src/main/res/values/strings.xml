@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Android Player Me</string>
+    <string name="create_your_avatar_label">Create Your Avatar</string>
+    <string name="update_avatar_label">Update Avatar</string>
+</resources>
