@@ -2,7 +2,7 @@ package com.kotlin.androidplayerme
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,10 +11,10 @@ import android.util.Log
 import android.view.View
 import android.webkit.*
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.kotlin.androidplayerme.databinding.ActivityWebViewBinding
-import java.io.File
 
 class WebViewActivity : AppCompatActivity() {
     companion object {
@@ -29,7 +29,6 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        requestPermission.launch(Manifest.permission.CAMERA)
         isCreateNew = intent.getBooleanExtra(IS_CREATE_NEW, false)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -62,10 +61,18 @@ class WebViewActivity : AppCompatActivity() {
 
                     fileChooserParams?.let {
                         if (it.isCaptureEnabled){
-                            openFileResultContract.launch(null)
+                            if (hasPermissionAccess()) {
+                                openCameraResultContract.launch(null)
+                            } else {
+                                requestPermission.launch(arrayOf(
+                                        Manifest.permission.CAMERA,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ))
+                            }
                         } else {
                             openDocumentContract.launch("image/*")
                         }
+
                     }
                     return true
                 }
@@ -80,24 +87,41 @@ class WebViewActivity : AppCompatActivity() {
     }
 
 
-    private val openFileResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
-        val path = MediaStore.Images.Media.insertImage(contentResolver, it, "fromCamera.jpeg", "")
-        filePathCallback?.onReceiveValue(arrayOf(Uri.parse(path)))
+    private val openCameraResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
+        it?.let {
+            Log.d("ON RESULT", "no data bitmap: ${it}")
+            val path = MediaStore.Images.Media.insertImage(contentResolver, it, "fromCamera.jpeg", "")
+            filePathCallback?.onReceiveValue(arrayOf(Uri.parse(path)))
+        } ?: Toast.makeText(this, "No Image captured !!", Toast.LENGTH_SHORT).show()
     }
 
     private val openDocumentContract = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ){
-        filePathCallback?.onReceiveValue(arrayOf(it))
+        it?.let {
+            filePathCallback?.onReceiveValue(arrayOf(it))
+        } ?: Toast.makeText(this, "No Image Selected !!", Toast.LENGTH_SHORT).show()
     }
 
     private val requestPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ){ granted ->
-        if (!granted){
+        ActivityResultContracts.RequestMultiplePermissions()
+    ){ permissionMap ->
+
+        if (!permissionMap.values.all { it }){
             Toast.makeText(this, "Camera permission not granted.", Toast.LENGTH_SHORT).show()
+        } else {
+            openCameraResultContract.launch(null)
         }
 
+    }
+
+    private fun hasPermissionAccess(): Boolean{
+        return arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ).all {
+            ActivityCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
     }
 
 
