@@ -1,4 +1,4 @@
-package com.kotlin.androidplayerme
+package com.kotlin.readyplayerme
 
 import android.app.AlertDialog
 import android.content.ClipData

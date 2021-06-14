@@ -1,10 +1,10 @@
-package com.kotlin.androidplayerme
+package com.kotlin.readyplayerme
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import com.kotlin.androidplayerme.databinding.ActivityMainBinding
+import com.kotlin.readyplayerme.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {

@@ -1,7 +1,6 @@
-package com.kotlin.androidplayerme
+package com.kotlin.readyplayerme
 
 import android.content.Context
-import android.content.SharedPreferences
 
 class CookieHelper(context: Context) {
     private val preference = context.getSharedPreferences("PlayerMe", Context.MODE_PRIVATE)

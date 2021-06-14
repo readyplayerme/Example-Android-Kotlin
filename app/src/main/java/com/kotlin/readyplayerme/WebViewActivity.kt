@@ -1,4 +1,4 @@
-package com.kotlin.androidplayerme
+package com.kotlin.readyplayerme
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -8,13 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.view.View
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.kotlin.androidplayerme.databinding.ActivityWebViewBinding
+import com.kotlin.readyplayerme.databinding.ActivityWebViewBinding
 
 class WebViewActivity : AppCompatActivity() {
     companion object {

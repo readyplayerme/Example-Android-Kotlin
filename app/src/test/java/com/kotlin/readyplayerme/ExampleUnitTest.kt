@@ -1,4 +1,4 @@
-package com.kotlin.androidplayerme
+package com.kotlin.readyplayerme
 
 import org.junit.Test
 

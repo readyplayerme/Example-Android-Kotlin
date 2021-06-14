@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kotlin.androidplayerme">
+    package="com.kotlin.readyplayerme">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -13,10 +13,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidPlayerMe">
-        <activity android:name=".WebViewActivity"
-            android:parentActivityName=".MainActivity"
+        <activity android:name="com.kotlin.readyplayerme.WebViewActivity"
+            android:parentActivityName="com.kotlin.readyplayerme.MainActivity"
             />
-        <activity android:name=".MainActivity">
+        <activity android:name="com.kotlin.readyplayerme.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
