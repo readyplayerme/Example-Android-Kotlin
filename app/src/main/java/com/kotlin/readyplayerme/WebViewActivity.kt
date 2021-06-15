@@ -163,7 +163,8 @@ class WebViewActivity : AppCompatActivity() {
                 WebStorage.getInstance().deleteAllData()
 
             }
-            loadUrl("https://readyplayer.me/avatar")
+            val url = getString(R.string.partner_url)
+            loadUrl(url)
         }
     }
 }
