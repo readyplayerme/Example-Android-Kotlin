@@ -123,16 +123,30 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-
     private fun handleAvatarCreated() {
         with(binding.webview){
             evaluateJavascript("""
                 window.addEventListener("message", receiveMessage, false)
-                function receiveMessage(event){
-                    if (typeof event.data === "string" && event.data.indexOf("https:") !== -1) {
+                function receiveMessage(event){                        
+                    // url display, used for displaying any string that starts with "https:"                    
+                    if (typeof data === "string" && event.data.indexOf("https:") !== -1) {
                         var content = document.querySelector(".content")
                         content.remove()
                         MyScript.openDialog(event.data)
+                    }
+                    else{
+                        // catches only RPM related messages, displays stickers object
+                        // parse incoming message into JSON, and if object has readyPlayerMe and sticker
+                        // fields take stickers and print it as a string
+                          
+                        const data = JSON.parse(event.data)
+                        
+                        if(data.readyPlayerMe && data.readyPlayerMe.stickers)
+                        {
+                            var content = document.querySelector(".content")
+                            content.remove()
+                            MyScript.openDialog(JSON.stringify(data.readyPlayerMe.stickers))
+                        }
                     }
                 }
             """.trimIndent(), null)
