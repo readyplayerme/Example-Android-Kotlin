@@ -129,7 +129,7 @@ class WebViewActivity : AppCompatActivity() {
                 window.addEventListener("message", receiveMessage, false)
                 function receiveMessage(event){                        
                     // url display, used for displaying any string that starts with "https:"                    
-                    if (typeof data === "string" && event.data.indexOf("https:") !== -1) {
+                    if (typeof event.data === "string" && event.data.indexOf("https:") !== -1) {
                         var content = document.querySelector(".content")
                         content.remove()
                         MyScript.openDialog(event.data)
