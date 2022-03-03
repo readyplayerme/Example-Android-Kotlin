@@ -194,7 +194,7 @@ class WebViewActivity : AppCompatActivity() {
                 WebStorage.getInstance().deleteAllData()
             }
 
-            val url = getString(R.string.partner_url)
+            val url = "https://${ getString(R.string.partner_subdomain) }.readyplayer.me/avatar?frameApi";
             loadUrl(url)
         }
     }
