@@ -11,7 +11,7 @@ import android.widget.Toast
 class WebViewInterface(private val context: Context) {
 
     @JavascriptInterface
-    fun openDialog(text: String){
+    fun receiveData(text: String){
         // add to clipboard
         val data = ClipData.newPlainText("Ready Player Me", text)
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

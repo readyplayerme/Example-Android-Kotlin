@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import com.kotlin.readyplayerme.databinding.ActivityMainBinding
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
