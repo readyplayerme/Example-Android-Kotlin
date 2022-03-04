@@ -14,17 +14,7 @@ class WebViewInterface(private val context: Context) {
     @JavascriptInterface
     fun receiveData(text: String){
         // extract avatar url from received message
-        var url = ""
-
-        if(text.endsWith(".glb"))   // post message v1, will be deprecated
-        {
-            url = text;
-        }
-        else    // post message v2
-        {
-            val json = JSONObject(text);
-            url = json.getJSONObject("data").getString("url");
-        }
+        var url = if(text.endsWith(".glb")) text else JSONObject(text).getJSONObject("data").getString("url");
 
         // copy to clipboard
         val data = ClipData.newPlainText("Ready Player Me", url)

@@ -64,8 +64,8 @@ class WebViewActivity : AppCompatActivity() {
                                 openCameraResultContract.launch(null)
                             } else {
                                 requestPermission.launch(arrayOf(
-                                        Manifest.permission.CAMERA,
-                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    Manifest.permission.CAMERA,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
                                 ))
                             }
                         } else {
@@ -83,7 +83,6 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private val openCameraResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
         it?.let {
@@ -104,7 +103,6 @@ class WebViewActivity : AppCompatActivity() {
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ){ permissionMap ->
-
         if (!permissionMap.values.all { it }){
             Toast.makeText(this, "Camera permission not granted.", Toast.LENGTH_SHORT).show()
         } else {
@@ -115,8 +113,8 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun hasPermissionAccess(): Boolean{
         return arrayOf(
-                Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         ).all {
             ActivityCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
@@ -128,30 +126,20 @@ class WebViewActivity : AppCompatActivity() {
                 function subscribe(event) {
                     // post message v1, this will be deprecated
                     if(event.data.endsWith('.glb')) {
-                        var content = document.querySelector(".content")
-                        content.remove()
+                        document.querySelector(".content").remove();
                         WebView.receiveData(event.data)
                     }
                     // post message v2
                     else {
-                        const json = parse(event);
+                        const json = typeof event === 'string' ? JSON.parse(event) : event;
                         const source = json.source;
                         
                         if (source !== 'readyplayerme') {
                           return;
                         }
     
-                        var content = document.querySelector(".content")
-                        content.remove()
+                        document.querySelector(".content").remove();
                         WebView.receiveData(event.data)
-                    }
-                }
-
-                function parse(event) {
-                    try {
-                        return JSON.parse(event.data);
-                    } catch (error) {
-                        return null;
                     }
                 }
     
