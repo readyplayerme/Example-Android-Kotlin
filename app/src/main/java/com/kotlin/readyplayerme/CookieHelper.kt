@@ -12,6 +12,6 @@ class CookieHelper(context: Context) {
 
     companion object {
         private const val HAS_COOKIE = "hasCookie"
-        private const val PREFERENCE_NAME = "PlayerMe"
+        private const val PREFERENCE_NAME = "Ready Player Me"
     }
 }

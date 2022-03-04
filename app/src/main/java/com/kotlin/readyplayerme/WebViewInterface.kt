@@ -7,20 +7,25 @@ import android.content.Context
 import android.content.Intent
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import org.json.JSONObject
 
 class WebViewInterface(private val context: Context) {
 
     @JavascriptInterface
-    fun openDialog(text: String){
-        // add to clipboard
-        val data = ClipData.newPlainText("Ready Player Me", text)
+    fun receiveData(text: String){
+        // extract avatar url from received message
+        var url = if(text.endsWith(".glb")) text else JSONObject(text).getJSONObject("data").getString("url");
+
+        // copy to clipboard
+        val data = ClipData.newPlainText("Ready Player Me", url)
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.setPrimaryClip(data)
         Toast.makeText(context, "Url copied into clipboard.", Toast.LENGTH_SHORT).show()
 
+        // display modal window with the avatar url
         val builder = AlertDialog.Builder(context).apply {
             setTitle("Result")
-            setMessage(text)
+            setMessage(url)
             setPositiveButton("Ok"){ dialog, _ ->
                 dialog.dismiss()
                 context.startActivity(

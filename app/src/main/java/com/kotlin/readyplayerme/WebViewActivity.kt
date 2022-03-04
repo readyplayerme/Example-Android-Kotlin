@@ -64,14 +64,13 @@ class WebViewActivity : AppCompatActivity() {
                                 openCameraResultContract.launch(null)
                             } else {
                                 requestPermission.launch(arrayOf(
-                                        Manifest.permission.CAMERA,
-                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    Manifest.permission.CAMERA,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
                                 ))
                             }
                         } else {
                             openDocumentContract.launch("image/*")
                         }
-
                     }
                     return true
                 }
@@ -84,7 +83,6 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private val openCameraResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
         it?.let {
@@ -105,7 +103,6 @@ class WebViewActivity : AppCompatActivity() {
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ){ permissionMap ->
-
         if (!permissionMap.values.all { it }){
             Toast.makeText(this, "Camera permission not granted.", Toast.LENGTH_SHORT).show()
         } else {
@@ -116,25 +113,55 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun hasPermissionAccess(): Boolean{
         return arrayOf(
-                Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         ).all {
             ActivityCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
-
     private fun handleAvatarCreated() {
         with(binding.webview){
             evaluateJavascript("""
-                window.addEventListener("message", receiveMessage, false)
-                function receiveMessage(event){
-                    if (typeof event.data === "string" && event.data.indexOf("https:") !== -1) {
-                        var content = document.querySelector(".content")
-                        content.remove()
-                        MyScript.openDialog(event.data)
+                function subscribe(event) {
+                    // post message v1, this will be deprecated
+                    if(event.data.endsWith('.glb')) {
+                        document.querySelector(".content").remove();
+                        WebView.receiveData(event.data)
+                    }
+                    // post message v2
+                    else {
+                        const json = parse(event);
+                        const source = json.source;
+                        
+                        if (source !== 'readyplayerme') {
+                          return;
+                        }
+    
+                        document.querySelector(".content").remove();
+                        WebView.receiveData(event.data)
                     }
                 }
+
+                function parse(event) {
+                    try {
+                        return JSON.parse(event.data);
+                    } catch (error) {
+                        return null;
+                    }
+                }
+    
+                window.postMessage(
+                    JSON.stringify({
+                        target: 'readyplayerme',
+                        type: 'subscribe',
+                        eventName: 'v1.**'
+                    }),
+                    '*'
+                );
+
+                window.removeEventListener('message', subscribe);
+                window.addEventListener('message', subscribe);
             """.trimIndent(), null)
         }
     }
@@ -152,7 +179,7 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         with(binding.webview){
-            addJavascriptInterface(WebViewInterface(this@WebViewActivity), "MyScript")
+            addJavascriptInterface(WebViewInterface(this@WebViewActivity), "WebView")
             if (isCreateNew){
                 clearHistory()
                 clearFormData()
@@ -161,9 +188,9 @@ class WebViewActivity : AppCompatActivity() {
                 CookieManager.getInstance().removeSessionCookies(null)
                 CookieManager.getInstance().flush()
                 WebStorage.getInstance().deleteAllData()
-
             }
-            val url = getString(R.string.partner_url)
+
+            val url = "https://${ getString(R.string.partner_subdomain) }.readyplayer.me/avatar?frameApi";
             loadUrl(url)
         }
     }
