@@ -131,7 +131,7 @@ class WebViewActivity : AppCompatActivity() {
                     }
                     // post message v2
                     else {
-                        const json = typeof event === 'string' ? JSON.parse(event) : event;
+                        const json = parse(event);
                         const source = json.source;
                         
                         if (source !== 'readyplayerme') {
@@ -140,6 +140,14 @@ class WebViewActivity : AppCompatActivity() {
     
                         document.querySelector(".content").remove();
                         WebView.receiveData(event.data)
+                    }
+                }
+
+                function parse(event) {
+                    try {
+                        return JSON.parse(event.data);
+                    } catch (error) {
+                        return null;
                     }
                 }
     
