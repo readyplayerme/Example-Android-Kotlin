@@ -171,7 +171,7 @@ class WebViewActivity : AppCompatActivity() {
         Log.i("WEBVIEWACTIVITY", "onCreate: isCreateNew $isCreateNew")
         with(binding.webview.settings){
             javaScriptEnabled = true
-            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+            cacheMode = WebSettings.LOAD_DEFAULT
             databaseEnabled = true
             domStorageEnabled = true
             allowFileAccess = true
@@ -189,7 +189,6 @@ class WebViewActivity : AppCompatActivity() {
                 CookieManager.getInstance().flush()
                 WebStorage.getInstance().deleteAllData()
             }
-
             val url = "https://${ getString(R.string.partner_subdomain) }.readyplayer.me/avatar?frameApi";
             loadUrl(url)
         }
