@@ -33,6 +33,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.kotlin.readyplayerme'
 }
 
 dependencies {

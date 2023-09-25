@@ -138,7 +138,6 @@ class WebViewActivity : AppCompatActivity() {
                           return;
                         }
     
-                        document.querySelector(".content").remove();
                         WebView.receiveData(event.data)
                     }
                 }
