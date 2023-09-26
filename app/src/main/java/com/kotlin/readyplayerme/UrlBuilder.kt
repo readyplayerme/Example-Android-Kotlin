@@ -1,6 +1,6 @@
 package com.kotlin.readyplayerme
 
-data class UrlConfigParameters(
+data class UrlConfig(
     var subdomain: String = "demo",
     var clearCache: Boolean = false,
     var quickStart: Boolean = false,
@@ -11,7 +11,7 @@ data class UrlConfigParameters(
 )
 
 class UrlBuilder(
-    private val configParams: UrlConfigParameters = UrlConfigParameters()
+    private val configParams: UrlConfig = UrlConfig()
 ) {
     companion object {
         private const val CLEAR_CACHE_PARAM = "clearCache"

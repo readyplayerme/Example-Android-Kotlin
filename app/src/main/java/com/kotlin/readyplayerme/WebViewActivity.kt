@@ -2,6 +2,10 @@ package com.kotlin.readyplayerme
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +16,10 @@ import android.view.View
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.kotlin.readyplayerme.databinding.ActivityWebViewBinding
+import com.kotlin.readyplayerme.WebViewInterface.WebMessage
 
 class WebViewActivity : AppCompatActivity() {
     companion object {
@@ -23,6 +29,12 @@ class WebViewActivity : AppCompatActivity() {
     private var isCreateNew = false
     
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    public val urlConfig: UrlConfig = UrlConfig()
+
+    public var OnAvatarExport: ((String) -> Unit)? = null
+    public var OnUserSet: ((String) -> Unit)? = null
+    public var OnUserAuthorized: ((String) -> Unit)? = null
+    public var OnAssetUnlock: ((WebViewInterface.AssetRecord) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,22 +136,14 @@ class WebViewActivity : AppCompatActivity() {
         with(binding.webview){
             evaluateJavascript("""
                 function subscribe(event) {
-                    // post message v1, this will be deprecated
-                    if(event.data.endsWith('.glb')) {
-                        document.querySelector(".content").remove();
-                        WebView.receiveData(event.data)
+                    const json = parse(event);
+                    const source = json.source;
+                    
+                    if (source !== 'readyplayerme' && !event.data.endsWith('.glb')) {
+                      return;
                     }
-                    // post message v2
-                    else {
-                        const json = parse(event);
-                        const source = json.source;
-                        
-                        if (source !== 'readyplayerme') {
-                          return;
-                        }
-    
-                        WebView.receiveData(event.data)
-                    }
+
+                    WebView.receiveData(event.data)
                 }
 
                 function parse(event) {
@@ -178,18 +182,77 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         with(binding.webview){
-            addJavascriptInterface(WebViewInterface(this@WebViewActivity), "WebView")
+            addJavascriptInterface(WebViewInterface(this@WebViewActivity){ webMessage ->
+                handleWebMessage(webMessage)
+            }, "WebView")
             if (isCreateNew){
-                clearHistory()
-                clearFormData()
-                clearCache(true)
-                CookieManager.getInstance().removeAllCookies(null)
-                CookieManager.getInstance().removeSessionCookies(null)
-                CookieManager.getInstance().flush()
-                WebStorage.getInstance().deleteAllData()
+                clearWebViewData()
             }
-            val url = "https://${ getString(R.string.partner_subdomain) }.readyplayer.me/avatar?frameApi";
-            loadUrl(url)
+
+            // Create an instance of UrlBuilder with the configured parameters
+            val urlBuilder = UrlBuilder(urlConfig)
+
+            loadUrl(urlBuilder.buildUrl())
         }
+    }
+
+    private fun handleWebMessage(webMessage: WebMessage) {
+        // Handle the webMessage here, and invoke different events based on its content
+        println("Web Event: ${webMessage.eventName} ")
+
+        when (webMessage.eventName) {
+            WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
+                var avatarUrl = webMessage.data["url"] as String
+                println("Web Event: ${webMessage.eventName}, Avatar URL: $avatarUrl")
+                ShowAlert(avatarUrl)
+                OnAvatarExport?.invoke(avatarUrl)
+            }
+            WebViewInterface.WebViewEvents.USER_SET -> {
+                var userId = webMessage.data["userId"] as String
+                println("Web Event: ${webMessage.eventName}, UserId: $userId")
+                OnUserSet?.invoke(userId)
+            }
+            WebViewInterface.WebViewEvents.USER_AUTHORIZED -> {
+                var userId = webMessage.data["userId"] as String
+                println("Web Event: ${webMessage.eventName}, UserId: $userId")
+                OnUserAuthorized?.invoke(userId)
+            }
+            WebViewInterface.WebViewEvents.ASSET_UNLOCK -> {
+                var assetRecord = webMessage.data["assetId"] as WebViewInterface.AssetRecord
+                println("Web Event: ${webMessage.eventName}, AssetRecord: $assetRecord")
+                OnAssetUnlock?.invoke(assetRecord)
+            }
+        }
+    }
+
+    public fun WebView.clearWebViewData() {
+        clearHistory()
+        clearFormData()
+        clearCache(true)
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().removeSessionCookies(null)
+        CookieManager.getInstance().flush()
+        WebStorage.getInstance().deleteAllData()
+    }
+
+    private fun ShowAlert(url: String){
+        var context = this@WebViewActivity;
+        val clipboardData = ClipData.newPlainText("Ready Player Me", url)
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(clipboardData)
+        Toast.makeText(context, "Url copied into clipboard.", Toast.LENGTH_SHORT).show()
+
+        // display modal window with the avatar url
+        val builder = AlertDialog.Builder(context).apply {
+            setTitle("Result")
+            setMessage(url)
+            setPositiveButton("Ok"){ dialog, _ ->
+                dialog.dismiss()
+                context.startActivity(
+                    Intent(context, MainActivity::class.java)
+                )
+            }
+        }.create()
+        builder.show()
     }
 }
