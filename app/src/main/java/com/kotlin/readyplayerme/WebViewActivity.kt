@@ -7,6 +7,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -53,12 +54,16 @@ class WebViewActivity : AppCompatActivity() {
             webViewClient = object: WebViewClient(){
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    binding.progressBar.visibility = View.GONE
+                    visibility = View.VISIBLE
+                }
+
+                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
                     handleAvatarCreated()
                     if (
                         CookieManager.getInstance().hasCookies()
                     ) CookieHelper(this@WebViewActivity).setUpdateState(true)
-                    binding.progressBar.visibility = View.GONE
-                    visibility = View.VISIBLE
                 }
             }
 
@@ -135,12 +140,25 @@ class WebViewActivity : AppCompatActivity() {
     private fun handleAvatarCreated() {
         with(binding.webview){
             evaluateJavascript("""
+                var hasSentPostMessage = false;
                 function subscribe(event) {
                     const json = parse(event);
                     const source = json.source;
                     
-                    if (source !== 'readyplayerme' && !event.data.endsWith('.glb')) {
+                    if (source !== 'readyplayerme') {
                       return;
+                    }
+                    
+                    if (json.eventName === 'v1.frame.ready' && !hasSentPostMessage) {
+                        window.postMessage(
+                            JSON.stringify({
+                                target: 'readyplayerme',
+                                type: 'subscribe',
+                                eventName: 'v1.**'
+                            }),
+                            '*'
+                        );
+                        hasSentPostMessage = true;
                     }
 
                     WebView.receiveData(event.data)
@@ -153,15 +171,6 @@ class WebViewActivity : AppCompatActivity() {
                         return null;
                     }
                 }
-    
-                window.postMessage(
-                    JSON.stringify({
-                        target: 'readyplayerme',
-                        type: 'subscribe',
-                        eventName: 'v1.**'
-                    }),
-                    '*'
-                );
 
                 window.removeEventListener('message', subscribe);
                 window.addEventListener('message', subscribe);
@@ -198,13 +207,11 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun handleWebMessage(webMessage: WebMessage) {
         // Handle the webMessage here, and invoke different events based on its content
-        println("Web Event: ${webMessage.eventName} ")
-
         when (webMessage.eventName) {
             WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
                 var avatarUrl = webMessage.data["url"] as String
                 println("Web Event: ${webMessage.eventName}, Avatar URL: $avatarUrl")
-                ShowAlert(avatarUrl)
+                showAlert(avatarUrl)
                 OnAvatarExport?.invoke(avatarUrl)
             }
             WebViewInterface.WebViewEvents.USER_SET -> {
@@ -235,7 +242,7 @@ class WebViewActivity : AppCompatActivity() {
         WebStorage.getInstance().deleteAllData()
     }
 
-    private fun ShowAlert(url: String){
+    private fun showAlert(url: String){
         var context = this@WebViewActivity;
         val clipboardData = ClipData.newPlainText("Ready Player Me", url)
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

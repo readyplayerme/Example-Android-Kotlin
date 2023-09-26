@@ -7,6 +7,7 @@ import com.google.gson.Gson
 
 class WebViewInterface(private val context: Context, private val callback: (WebMessage) -> Unit) {
 
+    private var isCallbackAdded = false
     data class WebMessage(
         val type: String = "",
         val source: String = "readyplayerme",
@@ -28,13 +29,6 @@ class WebViewInterface(private val context: Context, private val callback: (WebM
 
     @JavascriptInterface
     fun receiveData(json: String){
-        // Handle legacy avatar exported event
-        if(json.endsWith(".glb")){
-            var data = mapOf("AvatarUrl" to json)
-            var webMessage = WebMessage(data = data);
-            callback(webMessage)
-            return
-        }
         val gson = Gson()
         val webMessage = gson.fromJson(json, WebMessage::class.java)
         callback(webMessage)
