@@ -1,6 +1,7 @@
 package com.kotlin.readyplayerme
 
 import android.content.Context
+import android.os.Parcelable
 import android.webkit.JavascriptInterface
 import com.google.gson.Gson
 
@@ -8,6 +9,7 @@ import com.google.gson.Gson
 class WebViewInterface(private val context: Context, private val callback: (WebMessage) -> Unit) {
 
     private var isCallbackAdded = false
+
     data class WebMessage(
         val type: String = "",
         val source: String = "readyplayerme",

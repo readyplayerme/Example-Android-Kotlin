@@ -2,10 +2,6 @@ package com.kotlin.readyplayerme
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -17,25 +13,32 @@ import android.view.View
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.kotlin.readyplayerme.databinding.ActivityWebViewBinding
 import com.kotlin.readyplayerme.WebViewInterface.WebMessage
 
 class WebViewActivity : AppCompatActivity() {
+    interface WebViewCallback {
+        fun onAvatarExported(avatarUrl: String)
+        fun onOnUserSet(userId: String)
+        fun onOnUserAuthorized(userId: String)
+        fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord)
+    }
+
     companion object {
         const val IS_CREATE_NEW = "is create new"
+        var callback: WebViewCallback? = null
+
+        fun setWebViewCallback(callback: WebViewCallback) {
+            this.callback = callback
+        }
     }
+
     private lateinit var binding: ActivityWebViewBinding
     private var isCreateNew = false
     
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     public val urlConfig: UrlConfig = UrlConfig()
-
-    public var OnAvatarExport: ((String) -> Unit)? = null
-    public var OnUserSet: ((String) -> Unit)? = null
-    public var OnUserAuthorized: ((String) -> Unit)? = null
-    public var OnAssetUnlock: ((WebViewInterface.AssetRecord) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,27 +210,27 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun handleWebMessage(webMessage: WebMessage) {
         // Handle the webMessage here, and invoke different events based on its content
+        callback?.onOnUserSet(webMessage.eventName)
         when (webMessage.eventName) {
             WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
                 var avatarUrl = webMessage.data["url"] as String
                 println("Web Event: ${webMessage.eventName}, Avatar URL: $avatarUrl")
-                showAlert(avatarUrl)
-                OnAvatarExport?.invoke(avatarUrl)
+                callback?.onAvatarExported(avatarUrl)
             }
             WebViewInterface.WebViewEvents.USER_SET -> {
                 var userId = webMessage.data["userId"] as String
                 println("Web Event: ${webMessage.eventName}, UserId: $userId")
-                OnUserSet?.invoke(userId)
+                callback?.onOnUserSet(userId)
             }
             WebViewInterface.WebViewEvents.USER_AUTHORIZED -> {
                 var userId = webMessage.data["userId"] as String
                 println("Web Event: ${webMessage.eventName}, UserId: $userId")
-                OnUserAuthorized?.invoke(userId)
+                callback?.onOnUserAuthorized(userId)
             }
             WebViewInterface.WebViewEvents.ASSET_UNLOCK -> {
                 var assetRecord = webMessage.data["assetId"] as WebViewInterface.AssetRecord
                 println("Web Event: ${webMessage.eventName}, AssetRecord: $assetRecord")
-                OnAssetUnlock?.invoke(assetRecord)
+                callback?.onAssetUnlock(assetRecord)
             }
         }
     }
@@ -240,26 +243,5 @@ class WebViewActivity : AppCompatActivity() {
         CookieManager.getInstance().removeSessionCookies(null)
         CookieManager.getInstance().flush()
         WebStorage.getInstance().deleteAllData()
-    }
-
-    private fun showAlert(url: String){
-        var context = this@WebViewActivity;
-        val clipboardData = ClipData.newPlainText("Ready Player Me", url)
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.setPrimaryClip(clipboardData)
-        Toast.makeText(context, "Url copied into clipboard.", Toast.LENGTH_SHORT).show()
-
-        // display modal window with the avatar url
-        val builder = AlertDialog.Builder(context).apply {
-            setTitle("Result")
-            setMessage(url)
-            setPositiveButton("Ok"){ dialog, _ ->
-                dialog.dismiss()
-                context.startActivity(
-                    Intent(context, MainActivity::class.java)
-                )
-            }
-        }.create()
-        builder.show()
     }
 }
