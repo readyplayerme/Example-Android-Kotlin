@@ -2,6 +2,8 @@ package com.kotlin.readyplayerme
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -26,7 +28,8 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val IS_CREATE_NEW = "is create new"
+        const val CLEAR_BROWSER_CACHE = "clear_browser_cache"
+        const val URL_KEY = "url_key"
         var callback: WebViewCallback? = null
 
         fun setWebViewCallback(callback: WebViewCallback) {
@@ -38,18 +41,42 @@ class WebViewActivity : AppCompatActivity() {
     private var isCreateNew = false
     
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
-    public val urlConfig: UrlConfig = UrlConfig()
+    private var webViewUrl: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isCreateNew = intent.getBooleanExtra(CLEAR_BROWSER_CACHE, false)
+        webViewUrl = intent.getStringExtra(URL_KEY) ?: "https://demo.readyplayer.me/avatar"
+        println("RPM: url = $webViewUrl")
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        isCreateNew = intent.getBooleanExtra(IS_CREATE_NEW, false)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        setUpWebView(intent.getBooleanExtra(IS_CREATE_NEW, false))
+        setUpWebView(intent.getBooleanExtra(CLEAR_BROWSER_CACHE, false))
         setUpWebViewClient()
+    }
 
+    @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
+    private fun setUpWebView(clearBrowserCache: Boolean) {
+        Log.i("WEBVIEWACTIVITY", "onCreate: isCreateNew $clearBrowserCache")
+        with(binding.webview.settings){
+            javaScriptEnabled = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            databaseEnabled = true
+            domStorageEnabled = true
+            allowFileAccess = true
+
+        }
+
+        with(binding.webview){
+            addJavascriptInterface(WebViewInterface(this@WebViewActivity){ webMessage ->
+                handleWebMessage(webMessage)
+            }, "WebView")
+            if (clearBrowserCache){
+                clearWebViewData()
+            }
+            println("RPM: setUpWebView url = $webViewUrl")
+            webViewUrl?.let { loadUrl(it) }
+        }
     }
 
     private fun setUpWebViewClient() {
@@ -181,33 +208,6 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
-    private fun setUpWebView(isCreateNew: Boolean) {
-        Log.i("WEBVIEWACTIVITY", "onCreate: isCreateNew $isCreateNew")
-        with(binding.webview.settings){
-            javaScriptEnabled = true
-            cacheMode = WebSettings.LOAD_DEFAULT
-            databaseEnabled = true
-            domStorageEnabled = true
-            allowFileAccess = true
-
-        }
-
-        with(binding.webview){
-            addJavascriptInterface(WebViewInterface(this@WebViewActivity){ webMessage ->
-                handleWebMessage(webMessage)
-            }, "WebView")
-            if (isCreateNew){
-                clearWebViewData()
-            }
-
-            // Create an instance of UrlBuilder with the configured parameters
-            val urlBuilder = UrlBuilder(urlConfig)
-
-            loadUrl(urlBuilder.buildUrl())
-        }
-    }
-
     private fun handleWebMessage(webMessage: WebMessage) {
         // Handle the webMessage here, and invoke different events based on its content
         callback?.onOnUserSet(webMessage.eventName)
@@ -216,6 +216,7 @@ class WebViewActivity : AppCompatActivity() {
                 var avatarUrl = webMessage.data["url"] as String
                 println("Web Event: ${webMessage.eventName}, Avatar URL: $avatarUrl")
                 callback?.onAvatarExported(avatarUrl)
+                finishActivityWithResult()
             }
             WebViewInterface.WebViewEvents.USER_SET -> {
                 var userId = webMessage.data["userId"] as String
@@ -233,6 +234,15 @@ class WebViewActivity : AppCompatActivity() {
                 callback?.onAssetUnlock(assetRecord)
             }
         }
+    }
+
+    private fun finishActivityWithResult() {
+        val resultString = "Your Result String" // Replace with the actual result string
+
+        val data = Intent()
+        data.putExtra("result_key", resultString)
+        setResult(Activity.RESULT_OK, data)
+        finish()
     }
 
     public fun WebView.clearWebViewData() {

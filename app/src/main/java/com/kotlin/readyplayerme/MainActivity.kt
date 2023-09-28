@@ -1,5 +1,6 @@
 package com.kotlin.readyplayerme
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -8,11 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.kotlin.readyplayerme.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
     private lateinit var binding: ActivityMainBinding
+    private var urlConfig: UrlConfig = UrlConfig()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,45 +27,48 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
         }
 
         binding.createButton.setOnClickListener {
-            openWebViewPage()
+            openWebViewPage(false)
         }
 
         binding.updateButton.setOnClickListener{
-            openUpdateWebView()
+            openWebViewPage(true)
         }
     }
 
-    private fun openUpdateWebView() {
+
+    private fun openWebViewPage(clearBrowserCache: Boolean) {
         val intent = Intent(this, WebViewActivity::class.java)
-        intent.putExtra(WebViewActivity.IS_CREATE_NEW, false)
-        startActivity(intent)
+        intent.putExtra(WebViewActivity.CLEAR_BROWSER_CACHE, clearBrowserCache)
+        intent.putExtra(WebViewActivity.URL_KEY, UrlBuilder(urlConfig).buildUrl())
+        webViewActivityResultLauncher.launch(intent)
     }
 
-
-    private fun openWebViewPage() {
-        val intent = Intent(this, WebViewActivity::class.java)
-        intent.putExtra(WebViewActivity.IS_CREATE_NEW, true)
-        startActivity(intent)
+    private val webViewActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            println("RPM: Avatar Created successfully")
+        }
     }
+
 
     override fun onAvatarExported(avatarUrl: String) {
-        println("Web Event: Avatar Exported - Avatar URL: $avatarUrl")
+        println("RPM: Avatar Exported - Avatar URL: $avatarUrl")
+        showAlert(avatarUrl)
     }
 
     override fun onOnUserSet(userId: String) {
-        println("Web Event:  User Set - User ID: $userId")
+        println("RPM:  User Set - User ID: $userId")
     }
 
     override fun onOnUserAuthorized(userId: String) {
-        println("Web Event: User Authorized - User ID: $userId")
+        println("RPM: User Authorized - User ID: $userId")
     }
 
     override fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord) {
-        println("Web Event: Asset Unlock - Asset Record: $assetRecord")
+        println("RPM: Asset Unlock - Asset Record: $assetRecord")
     }
 
     private fun showAlert(url: String){
-        var context = this@WebViewActivity;
+        val context = this@MainActivity
         val clipboardData = ClipData.newPlainText("Ready Player Me", url)
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.setPrimaryClip(clipboardData)
@@ -74,9 +80,6 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
             setMessage(url)
             setPositiveButton("Ok"){ dialog, _ ->
                 dialog.dismiss()
-                context.startActivity(
-                    Intent(context, MainActivity::class.java)
-                )
             }
         }.create()
         builder.show()

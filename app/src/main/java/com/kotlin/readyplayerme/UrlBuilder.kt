@@ -1,5 +1,6 @@
 package com.kotlin.readyplayerme
 
+
 data class UrlConfig(
     var subdomain: String = "demo",
     var clearCache: Boolean = false,
@@ -11,7 +12,7 @@ data class UrlConfig(
 )
 
 class UrlBuilder(
-    private val configParams: UrlConfig = UrlConfig()
+    private val urlConfig: UrlConfig = UrlConfig()
 ) {
     companion object {
         private const val CLEAR_CACHE_PARAM = "clearCache"
@@ -21,31 +22,31 @@ class UrlBuilder(
         private const val LOGIN_TOKEN_PARAM = "token"
     }
 
-    fun buildUrl(loginToken: String = ""): String {
-        val baseUrl = "https://${configParams.subdomain}.readyplayer.me/"
+    fun buildUrl(): String {
+        val baseUrl = "https://${urlConfig.subdomain}.readyplayer.me/"
         val builder = StringBuilder(baseUrl)
 
-        if (configParams.language != Language.DEFAULT) {
-            builder.append("${configParams.language}/")
+        if (urlConfig.language != Language.DEFAULT) {
+            builder.append("${urlConfig.language}/")
         }
 
         builder.append("avatar?$FRAME_API_PARAM")
 
-        if (configParams.clearCache) {
+        if (urlConfig.clearCache) {
             builder.append("&$CLEAR_CACHE_PARAM")
         }
 
-        if (loginToken.isNotEmpty()) {
-            builder.append("&$LOGIN_TOKEN_PARAM=$loginToken")
+        if (urlConfig.loginToken.isNotEmpty()) {
+            builder.append("&$LOGIN_TOKEN_PARAM=$urlConfig.loginToken")
         }
 
-        if (configParams.quickStart) {
+        if (urlConfig.quickStart) {
             builder.append("&$QUICK_START_PARAM")
         } else {
-            if (configParams.gender != Gender.NONE) {
-                builder.append("&gender=${configParams.gender}")
+            if (urlConfig.gender != Gender.NONE) {
+                builder.append("&gender=${urlConfig.gender}")
             }
-            builder.append(if (configParams.bodyType == BodyType.SELECTABLE) "&$SELECT_BODY_PARAM" else "&bodyType=${configParams.bodyType}")
+            builder.append(if (urlConfig.bodyType == BodyType.SELECTABLE) "&$SELECT_BODY_PARAM" else "&bodyType=${urlConfig.bodyType}")
         }
         return builder.toString()
     }
