@@ -20,6 +20,7 @@ class WebViewInterface(private val context: Context, private val callback: (WebM
     object WebViewEvents {
         const val AVATAR_EXPORT = "v1.avatar.exported"
         const val USER_SET = "v1.user.set"
+        const val USER_UPDATED = "v1.user.updated"
         const val USER_AUTHORIZED = "v1.user.authorized"
         const val ASSET_UNLOCK = "v1.asset.unlock"
     }

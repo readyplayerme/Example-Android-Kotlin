@@ -56,7 +56,11 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
     }
 
     override fun onOnUserSet(userId: String) {
-        println("RPM:  User Set - User ID: $userId")
+        println("RPM:  User Set - User ID: |$userId|")
+    }
+
+    override fun onOnUserUpdated(userId: String) {
+        println("RPM:  User Updated - User ID: $userId")
     }
 
     override fun onOnUserAuthorized(userId: String) {

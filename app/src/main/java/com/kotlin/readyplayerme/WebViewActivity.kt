@@ -23,11 +23,14 @@ class WebViewActivity : AppCompatActivity() {
     interface WebViewCallback {
         fun onAvatarExported(avatarUrl: String)
         fun onOnUserSet(userId: String)
+        fun onOnUserUpdated(userId: String)
         fun onOnUserAuthorized(userId: String)
         fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord)
     }
 
     companion object {
+        private const val ID_KEY = "id"
+        private const val ASSET_ID_KEY = "assetId"
         const val CLEAR_BROWSER_CACHE = "clear_browser_cache"
         const val URL_KEY = "url_key"
         var callback: WebViewCallback? = null
@@ -90,7 +93,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                     super.onPageStarted(view, url, favicon)
-                    handleAvatarCreated()
+                    executeJavascript()
                     if (
                         CookieManager.getInstance().hasCookies()
                     ) CookieHelper(this@WebViewActivity).setUpdateState(true)
@@ -133,7 +136,7 @@ class WebViewActivity : AppCompatActivity() {
 
     private val openCameraResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
         it?.let {
-            Log.d("ON RESULT", "no data bitmap: ${it}")
+            Log.d("ON RESULT", "no data bitmap: $it")
             val path = MediaStore.Images.Media.insertImage(contentResolver, it, "fromCamera.jpeg", "")
             filePathCallback?.onReceiveValue(arrayOf(Uri.parse(path)))
         } ?: Toast.makeText(this, "No Image captured !!", Toast.LENGTH_SHORT).show()
@@ -167,7 +170,7 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleAvatarCreated() {
+    private fun executeJavascript() {
         with(binding.webview){
             evaluateJavascript("""
                 var hasSentPostMessage = false;
@@ -209,30 +212,51 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun handleWebMessage(webMessage: WebMessage) {
-        // Handle the webMessage here, and invoke different events based on its content
-        callback?.onOnUserSet(webMessage.eventName)
+
         when (webMessage.eventName) {
-            WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
-                var avatarUrl = webMessage.data["url"] as String
-                println("Web Event: ${webMessage.eventName}, Avatar URL: $avatarUrl")
-                callback?.onAvatarExported(avatarUrl)
-                finishActivityWithResult()
-            }
             WebViewInterface.WebViewEvents.USER_SET -> {
-                var userId = webMessage.data["userId"] as String
-                println("Web Event: ${webMessage.eventName}, UserId: $userId")
-                callback?.onOnUserSet(userId)
+                val userId = webMessage.data.getStringProperty(ID_KEY)
+                if (userId != null) {
+                    callback?.onOnUserSet(userId)
+                }
+            }
+            WebViewInterface.WebViewEvents.USER_UPDATED -> {
+                val userId = webMessage.data.getStringProperty(ID_KEY)
+                if (userId != null) {
+                    callback?.onOnUserUpdated(userId)
+                }
             }
             WebViewInterface.WebViewEvents.USER_AUTHORIZED -> {
-                var userId = webMessage.data["userId"] as String
-                println("Web Event: ${webMessage.eventName}, UserId: $userId")
-                callback?.onOnUserAuthorized(userId)
+                val userId = webMessage.data.getStringProperty(ID_KEY)
+                if (userId != null) {
+                    callback?.onOnUserAuthorized(userId)
+                }
             }
             WebViewInterface.WebViewEvents.ASSET_UNLOCK -> {
-                var assetRecord = webMessage.data["assetId"] as WebViewInterface.AssetRecord
-                println("Web Event: ${webMessage.eventName}, AssetRecord: $assetRecord")
-                callback?.onAssetUnlock(assetRecord)
+                val userId = webMessage.data.getStringProperty(ID_KEY)
+                val assetId = webMessage.data.getStringProperty(ASSET_ID_KEY)
+                if(userId != null && assetId != null){
+                    var assetRecord = WebViewInterface.AssetRecord(userId, assetId)
+                    callback?.onAssetUnlock(assetRecord)
+                }
             }
+            WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
+                val avatarUrl = webMessage.data.getStringProperty("url")
+                if(avatarUrl != null){
+                    callback?.onAvatarExported(avatarUrl)
+                    finishActivityWithResult()
+                }
+            }
+        }
+    }
+
+    private fun Map<String, String>.getStringProperty(key: String): String? {
+        val value = this[key]
+        return if (value is String) {
+            value
+        } else {
+            println("RPM DEBUG ERROR: $key is either not present or not of the expected type")
+            null
         }
     }
 
