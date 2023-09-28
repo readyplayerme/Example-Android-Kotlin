@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,7 +36,6 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
         }
     }
 
-
     private fun openWebViewPage(clearBrowserCache: Boolean) {
         val intent = Intent(this, WebViewActivity::class.java)
         intent.putExtra(WebViewActivity.CLEAR_BROWSER_CACHE, clearBrowserCache)
@@ -45,30 +45,31 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
 
     private val webViewActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            println("RPM: Avatar Created successfully")
+            Log.d("RPM", result.data.toString())
         }
     }
 
 
     override fun onAvatarExported(avatarUrl: String) {
-        println("RPM: Avatar Exported - Avatar URL: $avatarUrl")
+        Log.d("RPM", "Avatar Exported - Avatar URL: |$avatarUrl|")
         showAlert(avatarUrl)
     }
 
     override fun onOnUserSet(userId: String) {
-        println("RPM:  User Set - User ID: |$userId|")
+        Log.d("RPM", "User Set - User ID: |$userId|")
     }
 
     override fun onOnUserUpdated(userId: String) {
-        println("RPM:  User Updated - User ID: $userId")
+        Log.d("RPM", "User Updated - User ID: |$userId|")
     }
 
     override fun onOnUserAuthorized(userId: String) {
         println("RPM: User Authorized - User ID: $userId")
+        Log.d("RPM", "User Authorized - User ID: |$userId|")
     }
 
     override fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord) {
-        println("RPM: Asset Unlock - Asset Record: $assetRecord")
+        Log.d("RPM", "Asset Unlock - Asset Record: |$assetRecord|")
     }
 
     private fun showAlert(url: String){

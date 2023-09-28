@@ -50,7 +50,6 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         isCreateNew = intent.getBooleanExtra(CLEAR_BROWSER_CACHE, false)
         webViewUrl = intent.getStringExtra(URL_KEY) ?: "https://demo.readyplayer.me/avatar"
-        println("RPM: url = $webViewUrl")
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -60,7 +59,7 @@ class WebViewActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     private fun setUpWebView(clearBrowserCache: Boolean) {
-        Log.i("WEBVIEWACTIVITY", "onCreate: isCreateNew $clearBrowserCache")
+        Log.d("RPM", "onCreate: clearBrowserCache $clearBrowserCache")
         with(binding.webview.settings){
             javaScriptEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
@@ -77,8 +76,8 @@ class WebViewActivity : AppCompatActivity() {
             if (clearBrowserCache){
                 clearWebViewData()
             }
-            println("RPM: setUpWebView url = $webViewUrl")
-            webViewUrl?.let { loadUrl(it) }
+            Log.d("RPM","setUpWebView url = $webViewUrl")
+            loadUrl(webViewUrl)
         }
     }
 
@@ -255,13 +254,13 @@ class WebViewActivity : AppCompatActivity() {
         return if (value is String) {
             value
         } else {
-            println("RPM DEBUG ERROR: $key is either not present or not of the expected type")
+            Log.d("RPM","ERROR: $key is either not present or not of the expected type")
             null
         }
     }
 
     private fun finishActivityWithResult() {
-        val resultString = "Your Result String" // Replace with the actual result string
+        val resultString = "Avatar Created Successfully"
 
         val data = Intent()
         data.putExtra("result_key", resultString)
@@ -269,7 +268,7 @@ class WebViewActivity : AppCompatActivity() {
         finish()
     }
 
-    public fun WebView.clearWebViewData() {
+    fun WebView.clearWebViewData() {
         clearHistory()
         clearFormData()
         clearCache(true)
