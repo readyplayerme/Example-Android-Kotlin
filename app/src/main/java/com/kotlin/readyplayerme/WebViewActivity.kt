@@ -26,6 +26,7 @@ class WebViewActivity : AppCompatActivity() {
         fun onOnUserUpdated(userId: String)
         fun onOnUserAuthorized(userId: String)
         fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord)
+        fun onUserLogout()
     }
 
     companion object {
@@ -246,6 +247,9 @@ class WebViewActivity : AppCompatActivity() {
                     finishActivityWithResult()
                 }
             }
+            WebViewInterface.WebViewEvents.USER_LOGOUT -> {
+                callback?.onUserLogout()
+            }
         }
     }
 
@@ -254,7 +258,7 @@ class WebViewActivity : AppCompatActivity() {
         return if (value is String) {
             value
         } else {
-            Log.d("RPM","ERROR: $key is either not present or not of the expected type")
+            Log.e("RPM","ERROR: $key is either not present or not of the expected type")
             null
         }
     }

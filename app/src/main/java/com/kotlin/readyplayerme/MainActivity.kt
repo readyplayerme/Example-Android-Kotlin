@@ -45,31 +45,35 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
 
     private val webViewActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            Log.d("RPM", result.data.toString())
+            Log.d("RPM", "Result activity run.")
         }
     }
 
 
     override fun onAvatarExported(avatarUrl: String) {
-        Log.d("RPM", "Avatar Exported - Avatar URL: |$avatarUrl|")
+        Log.d("RPM", "Avatar Exported - Avatar URL: $avatarUrl")
         showAlert(avatarUrl)
     }
 
     override fun onOnUserSet(userId: String) {
-        Log.d("RPM", "User Set - User ID: |$userId|")
+        Log.d("RPM", "User Set - User ID: $userId")
     }
 
     override fun onOnUserUpdated(userId: String) {
-        Log.d("RPM", "User Updated - User ID: |$userId|")
+        Log.d("RPM", "User Updated - User ID: $userId")
     }
 
     override fun onOnUserAuthorized(userId: String) {
         println("RPM: User Authorized - User ID: $userId")
-        Log.d("RPM", "User Authorized - User ID: |$userId|")
+        Log.d("RPM", "User Authorized - User ID: $userId")
     }
 
     override fun onAssetUnlock(assetRecord: WebViewInterface.AssetRecord) {
-        Log.d("RPM", "Asset Unlock - Asset Record: |$assetRecord|")
+        Log.d("RPM", "Asset Unlock - Asset Record: $assetRecord")
+    }
+
+    override fun onUserLogout() {
+        Log.d("RPM", "User Logout")
     }
 
     private fun showAlert(url: String){

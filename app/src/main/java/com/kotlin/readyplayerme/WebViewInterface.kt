@@ -23,6 +23,7 @@ class WebViewInterface(private val context: Context, private val callback: (WebM
         const val USER_UPDATED = "v1.user.updated"
         const val USER_AUTHORIZED = "v1.user.authorized"
         const val ASSET_UNLOCK = "v1.asset.unlock"
+        const val USER_LOGOUT = "v1.user.logout"
     }
 
     data class AssetRecord(
