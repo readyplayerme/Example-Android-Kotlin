@@ -215,37 +215,39 @@ class WebViewActivity : AppCompatActivity() {
 
         when (webMessage.eventName) {
             WebViewInterface.WebViewEvents.USER_SET -> {
-                val userId = webMessage.data.getStringProperty(ID_KEY)
-                if (userId != null) {
-                    callback?.onOnUserSet(userId)
+                val userId = requireNotNull(webMessage.data[ID_KEY]) {
+                    "RPM: 'userId' cannot be null"
                 }
+                callback?.onOnUserSet(userId)
             }
             WebViewInterface.WebViewEvents.USER_UPDATED -> {
-                val userId = webMessage.data.getStringProperty(ID_KEY)
-                if (userId != null) {
-                    callback?.onOnUserUpdated(userId)
+                val userId = requireNotNull(webMessage.data[ID_KEY]) {
+                    "RPM: 'userId' cannot be null webMessage.data"
                 }
+                callback?.onOnUserUpdated(userId)
             }
             WebViewInterface.WebViewEvents.USER_AUTHORIZED -> {
-                val userId = webMessage.data.getStringProperty(ID_KEY)
-                if (userId != null) {
-                    callback?.onOnUserAuthorized(userId)
+                val userId = requireNotNull(webMessage.data[ID_KEY]) {
+                    "RPM: 'userId' cannot be null webMessage.data"
                 }
+                callback?.onOnUserAuthorized(userId)
             }
             WebViewInterface.WebViewEvents.ASSET_UNLOCK -> {
-                val userId = webMessage.data.getStringProperty(ID_KEY)
-                val assetId = webMessage.data.getStringProperty(ASSET_ID_KEY)
-                if(userId != null && assetId != null){
-                    var assetRecord = WebViewInterface.AssetRecord(userId, assetId)
-                    callback?.onAssetUnlock(assetRecord)
+                val userId = requireNotNull(webMessage.data[ID_KEY]) {
+                    "RPM: 'id' cannot be null webMessage.data"
                 }
+                val assetId = requireNotNull(webMessage.data[ASSET_ID_KEY]) {
+                    "RPM: 'assetId' cannot be null webMessage.data"
+                }
+                var assetRecord = WebViewInterface.AssetRecord(userId, assetId)
+                callback?.onAssetUnlock(assetRecord)
             }
             WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
-                val avatarUrl = webMessage.data.getStringProperty("url")
-                if(avatarUrl != null){
-                    callback?.onAvatarExported(avatarUrl)
-                    finishActivityWithResult()
+                val avatarUrl = requireNotNull(webMessage.data["url"]) {
+                    "RPM: 'url' cannot be null in webMessage.data"
                 }
+                callback?.onAvatarExported(avatarUrl)
+                finishActivityWithResult()
             }
             WebViewInterface.WebViewEvents.USER_LOGOUT -> {
                 callback?.onUserLogout()

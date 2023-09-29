@@ -64,7 +64,6 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
     }
 
     override fun onOnUserAuthorized(userId: String) {
-        println("RPM: User Authorized - User ID: $userId")
         Log.d("RPM", "User Authorized - User ID: $userId")
     }
 
