@@ -43,12 +43,26 @@ class UrlBuilder(
         if (urlConfig.quickStart) {
             builder.append("&$QUICK_START_PARAM")
         } else {
-            if (urlConfig.gender != Gender.NONE) {
-                builder.append("&gender=${urlConfig.gender}")
-            }
-            builder.append(if (urlConfig.bodyType == BodyType.SELECTABLE) "&$SELECT_BODY_PARAM" else "&bodyType=${urlConfig.bodyType}")
+            appendGender(builder)
+            appendBodyType(builder)
         }
         return builder.toString()
+    }
+
+    private fun appendGender(builder: StringBuilder) {
+        if (urlConfig.gender != Gender.NONE) {
+            builder.append("&gender=${urlConfig.gender}")
+        }
+    }
+
+    private fun appendBodyType(builder: StringBuilder) {
+        builder.append(
+            if (urlConfig.bodyType == BodyType.SELECTABLE) {
+                "&$SELECT_BODY_PARAM"
+            } else {
+                "&bodyType=${urlConfig.bodyType}"
+            }
+        )
     }
 }
 

@@ -245,6 +245,7 @@ class WebViewActivity : AppCompatActivity() {
             WebViewInterface.WebViewEvents.AVATAR_EXPORT -> {
                 val avatarUrl = requireNotNull(webMessage.data["url"]) {
                     "RPM: 'url' cannot be null in webMessage.data"
+                    finishActivityWithFailure("RPM: avatar 'url' property not found in event data")
                 }
                 callback?.onAvatarExported(avatarUrl)
                 finishActivityWithResult()
@@ -255,22 +256,19 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun Map<String, String>.getStringProperty(key: String): String? {
-        val value = this[key]
-        return if (value is String) {
-            value
-        } else {
-            Log.e("RPM","ERROR: $key is either not present or not of the expected type")
-            null
-        }
-    }
-
     private fun finishActivityWithResult() {
         val resultString = "Avatar Created Successfully"
 
         val data = Intent()
         data.putExtra("result_key", resultString)
         setResult(Activity.RESULT_OK, data)
+        finish()
+    }
+
+    private fun finishActivityWithFailure(errorMessage: String) {
+        val data = Intent()
+        data.putExtra("error_key", errorMessage)
+        setResult(Activity.RESULT_CANCELED, data)
         finish()
     }
 
