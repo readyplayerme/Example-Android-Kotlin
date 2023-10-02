@@ -1,38 +1,40 @@
 package com.kotlin.readyplayerme
 
-import android.app.AlertDialog
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
+import android.os.Parcelable
 import android.webkit.JavascriptInterface
-import android.widget.Toast
-import org.json.JSONObject
+import com.google.gson.Gson
 
-class WebViewInterface(private val context: Context) {
+
+class WebViewInterface(private val context: Context, private val callback: (WebMessage) -> Unit) {
+
+    private var isCallbackAdded = false
+
+    data class WebMessage(
+        val type: String = "",
+        val source: String = "readyplayerme",
+        val eventName: String = "event",
+        val data: Map<String, String>
+    )
+
+    object WebViewEvents {
+        const val AVATAR_EXPORT = "v1.avatar.exported"
+        const val USER_SET = "v1.user.set"
+        const val USER_UPDATED = "v1.user.updated"
+        const val USER_AUTHORIZED = "v1.user.authorized"
+        const val ASSET_UNLOCK = "v1.asset.unlock"
+        const val USER_LOGOUT = "v1.user.logout"
+    }
+
+    data class AssetRecord(
+        val userId: String,
+        val assetId: String
+    )
 
     @JavascriptInterface
-    fun receiveData(text: String){
-        // extract avatar url from received message
-        var url = if(text.endsWith(".glb")) text else JSONObject(text).getJSONObject("data").getString("url");
-
-        // copy to clipboard
-        val data = ClipData.newPlainText("Ready Player Me", url)
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.setPrimaryClip(data)
-        Toast.makeText(context, "Url copied into clipboard.", Toast.LENGTH_SHORT).show()
-
-        // display modal window with the avatar url
-        val builder = AlertDialog.Builder(context).apply {
-            setTitle("Result")
-            setMessage(url)
-            setPositiveButton("Ok"){ dialog, _ ->
-                dialog.dismiss()
-                context.startActivity(
-                    Intent(context, MainActivity::class.java)
-                )
-            }
-        }.create()
-        builder.show()
+    fun receiveData(json: String){
+        val gson = Gson()
+        val webMessage = gson.fromJson(json, WebMessage::class.java)
+        callback(webMessage)
     }
 }
