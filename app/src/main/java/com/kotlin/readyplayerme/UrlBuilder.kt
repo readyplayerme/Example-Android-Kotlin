@@ -20,6 +20,7 @@ class UrlBuilder(
         private const val QUICK_START_PARAM = "quickStart"
         private const val SELECT_BODY_PARAM = "selectBodyType"
         private const val LOGIN_TOKEN_PARAM = "token"
+        private const val SOURCE_PARAM="source=android-avatar-creator"
     }
 
     fun buildUrl(): String {
@@ -30,7 +31,7 @@ class UrlBuilder(
             builder.append("${urlConfig.language}/")
         }
 
-        builder.append("avatar?$FRAME_API_PARAM")
+        builder.append("avatar?$FRAME_API_PARAM&$SOURCE_PARAM")
 
         if (urlConfig.clearCache) {
             builder.append("&$CLEAR_CACHE_PARAM")
