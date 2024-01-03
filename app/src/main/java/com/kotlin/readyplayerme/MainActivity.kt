@@ -36,6 +36,12 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
         }
     }
 
+    private fun openAvatarView(avatarUrl: String){
+        val intent = Intent(this, AvatarLoaded::class.java);
+        intent.putExtra("user_avatar_url", avatarUrl);
+        startActivity(intent);
+    }
+
     private fun openWebViewPage(clearBrowserCache: Boolean) {
         val intent = Intent(this, WebViewActivity::class.java)
         intent.putExtra(WebViewActivity.CLEAR_BROWSER_CACHE, clearBrowserCache)
@@ -49,10 +55,11 @@ class MainActivity : AppCompatActivity(), WebViewActivity.WebViewCallback {
         }
     }
 
-
     override fun onAvatarExported(avatarUrl: String) {
         Log.d("RPM", "Avatar Exported - Avatar URL: $avatarUrl")
-        showAlert(avatarUrl)
+
+        val avatarImg = avatarUrl.replace(".glb", ".png")
+        openAvatarView(avatarImg);
     }
 
     override fun onOnUserSet(userId: String) {
